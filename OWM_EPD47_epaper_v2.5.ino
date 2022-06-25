@@ -47,7 +47,7 @@ String  Time_str = "--:--:--";
 String  Date_str = "-- --- ----";
 int     wifi_signal, CurrentHour = 0, CurrentMin = 0, CurrentSec = 0, EventCnt = 0, vref = 1100;
 //################ PROGRAM VARIABLES and OBJECTS ##########################################
-#define max_readings 24 // Limited to 3-days here, but could go to 5-days = 40  
+#define max_readings 10 // Limited to 3-days here, but could go to 5-days = 40  
 
 Forecast_record_type  WxConditions[1];
 Forecast_record_type  WxForecast[max_readings];
@@ -58,8 +58,8 @@ float humidity_readings[max_readings]    = {0};
 float rain_readings[max_readings]        = {0};
 float snow_readings[max_readings]        = {0};
 
-long SleepDuration   = 60; // Sleep time in minutes, aligned to the nearest minute boundary, so if 30 will always update at 00 or 30 past the hour
-int  WakeupHour      = 8;  // Don't wakeup until after 07:00 to save battery power
+long SleepDuration   = 15; // Sleep time in minutes, aligned to the nearest minute boundary, so if 30 will always update at 00 or 30 past the hour
+int  WakeupHour      = 5;  // Don't wakeup until after 07:00 to save battery power
 int  SleepHour       = 23; // Sleep after 23:00 to save battery power
 long StartTime       = 0;
 long SleepTimer      = 0;
@@ -71,6 +71,7 @@ long Delta           = 30; // ESP32 rtc speed compensation, prevents display at 
 #include "opensans12b.h"
 #include "opensans18b.h"
 #include "opensans24b.h"
+#include "opensans26b.h"
 
 GFXfont  currentFont;
 uint8_t *framebuffer;
@@ -342,9 +343,9 @@ void DisplayWeather() {                          // 4.7" e-paper display is 960x
   DisplayGeneralInfoSection();                   // Top line of the display
   DisplayDisplayWindSection(137, 150, WxConditions[0].Winddir, WxConditions[0].Windspeed, 100);
   DisplayAstronomySection(5, 255);               // Astronomy section Sun rise/set, Moon phase and Moon icon
-  DisplayMainWeatherSection(320, 110);           // Centre section of display for Location, temperature, Weather report, current Wx Symbol
-  DisplayWeatherIcon(810, 130);                  // Display weather icon    scale = Large;
-  DisplayForecastSection(320, 220);              // 3hr forecast boxes
+  DisplayMainWeatherSection(420, 120);           // Centre section of display for Location, temperature, Weather report, current Wx Symbol
+  //DisplayWeatherIcon(810, 130);                  // Display weather icon    scale = Large;
+  DisplayForecastSection(20, 380);              // 3hr forecast boxes
 }
 
 void DisplayGeneralInfoSection() {
@@ -361,8 +362,8 @@ void DisplayWeatherIcon(int x, int y) {
 void DisplayMainWeatherSection(int x, int y) {
   setFont(OpenSans8B);
   DisplayTemperatureSection(x, y - 40);
-  DisplayForecastTextSection(x - 55, y + 25);
-  DisplayPressureSection(x - 25, y + 90, WxConditions[0].Pressure, WxConditions[0].Trend);
+  DisplayForecastTextSection(x - 55, y + 35);
+  DisplayPressureSection(x - 25, y + 100, WxConditions[0].Pressure, WxConditions[0].Trend);
 }
 
 void DisplayDisplayWindSection(int x, int y, float angle, float windspeed, int Cradius) {
@@ -422,10 +423,10 @@ String WindDegToOrdinalDirection(float winddirection) {
 }
 
 void DisplayTemperatureSection(int x, int y) {
-  setFont(OpenSans18B);
+  setFont(OpenSans26B);
   drawString(x - 30, y, String(WxConditions[0].Temperature, 1) + "°    " + String(WxConditions[0].Humidity, 0) + "%", LEFT);
   setFont(OpenSans12B);
-  drawString(x + 10, y + 35, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
+  drawString(x + 10, y + 45, String(WxConditions[0].High, 0) + "° | " + String(WxConditions[0].Low, 0) + "°", CENTER); // Show forecast high and Low
 }
 
 void DisplayForecastTextSection(int x, int y) {
@@ -556,7 +557,7 @@ void DisplayForecastSection(int x, int y) {
     f++;
   } while (f < max_readings);
   int r = 0;
-  do { // Pre-load temporary arrays with with data - because C parses by reference and remember that[1] has already been converted to I units
+  /*do { // Pre-load temporary arrays with with data - because C parses by reference and remember that[1] has already been converted to I units
     if (Units == "I") pressure_readings[r] = WxForecast[r].Pressure * 0.02953;   else pressure_readings[r] = WxForecast[r].Pressure;
     if (Units == "I") rain_readings[r]     = WxForecast[r].Rainfall * 0.0393701; else rain_readings[r]     = WxForecast[r].Rainfall;
     if (Units == "I") snow_readings[r]     = WxForecast[r].Snowfall * 0.0393701; else snow_readings[r]     = WxForecast[r].Snowfall;
@@ -576,6 +577,7 @@ void DisplayForecastSection(int x, int y) {
     DrawGraph(gx + 3 * gap + 5, gy, gwidth, gheight, 0, 30, Units == "M" ? TXT_RAINFALL_MM : TXT_RAINFALL_IN, rain_readings, max_readings, autoscale_on, barchart_on);
   else
     DrawGraph(gx + 3 * gap + 5, gy, gwidth, gheight, 0, 30, Units == "M" ? TXT_SNOWFALL_MM : TXT_SNOWFALL_IN, snow_readings, max_readings, autoscale_on, barchart_on);
+    */
 }
 
 void DisplayConditionsSection(int x, int y, String IconName, bool IconSize) {
